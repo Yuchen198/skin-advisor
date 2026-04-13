@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hautpflege-Berater</title>
+<style>
+  :root {
+    --bg: #f6f1ec;
+    --card: #ffffff;
+    --primary: #c97b63;
+    --primary-dark: #a85b44;
+    --text: #2b2b2b;
+    --muted: #6b6b6b;
+    --border: #e6dcd3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .container {
+    width: 100%;
+    max-width: 640px;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    padding: 36px;
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: 26px;
+    font-weight: 600;
+  }
+  .subtitle {
+    color: var(--muted);
+    margin: 0 0 28px;
+    font-size: 15px;
+  }
+  .progress {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--primary);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .question {
+    display: none;
+  }
+  .question.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .question h2 {
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .hint {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0 0 18px;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .option {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 15px;
+  }
+  .option:hover {
+    border-color: var(--primary);
+    background: #fdf7f4;
+  }
+  .option input {
+    margin-right: 12px;
+    accent-color: var(--primary);
+    transform: scale(1.2);
+  }
+  .option.selected {
+    border-color: var(--primary);
+    background: #fdf7f4;
+  }
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--primary-dark);
+  }
+  .btn-primary:disabled {
+    background: #d8c4bc;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 2px solid var(--border);
+  }
+  .btn-secondary:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .result {
+    display: none;
+    text-align: center;
+  }
+  .result.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+  .result-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: #fdf7f4;
+    color: var(--primary-dark);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .result h2 {
+    font-size: 24px;
+    margin: 0 0 8px;
+  }
+  .result-product {
+    font-size: 20px;
+    color: var(--primary-dark);
+    font-weight: 600;
+    margin: 16px 0;
+  }
+  .result-desc {
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .ingredients {
+    background: #fdf7f4;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .ingredients strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .ingredients ul {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Yasmin's Hautpflege-Berater</h1>
+    <p class="subtitle">Beantworte ein paar Fragen und erhalte eine persönliche Pflege-Empfehlung.</p>
+
+    <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div id="quiz"></div>
+
+    <div class="result" id="result">
+      <span class="result-badge" id="resultBadge">Deine Empfehlung</span>
+      <h2>Das passt zu deiner Haut</h2>
+      <div class="result-product" id="resultProduct"></div>
+      <p class="result-desc" id="resultDesc"></p>
+      <div class="ingredients">
+        <strong>Wichtige Wirkstoffe:</strong>
+        <ul id="resultIngredients"></ul>
+      </div>
+      <button class="btn-secondary" onclick="restart()">Neu starten</button>
+    </div>
+  </div>
+
+<script>
+const questions = [
+  {
+    id: "age",
+    title: "Wie alt bist du?",
+    hint: "Das Alter beeinflusst die Hautbedürfnisse stark.",
+    multi: false,
+    options: [
+      { value: "u20", label: "Unter 20" },
+      { value: "20_30", label: "20 – 30" },
+      { value: "30_45", label: "30 – 45" },
+      { value: "45_60", label: "45 – 60" },
+      { value: "ue60", label: "Über 60" }
+    ]
+  },
+  {
+    id: "type",
+    title: "Wie würdest du deinen Hauttyp beschreiben?",
+    hint: "Wie fühlt sich deine Haut typischerweise einige Stunden nach der Reinigung an?",
+    multi: false,
+    options: [
+      { value: "trocken", label: "Trocken – spannt, fühlt sich rau an" },
+      { value: "fettig", label: "Fettig – glänzt überall, große Poren" },
+      { value: "misch", label: "Mischhaut – T-Zone fettig, Wangen normal/trocken" },
+      { value: "normal", label: "Normal – ausgeglichen, kaum Probleme" },
+      { value: "sensibel", label: "Sensibel – reagiert schnell mit Rötungen" }
+    ]
+  },
+  {
+    id: "concerns",
+    title: "Welche Hautprobleme beschäftigen dich aktuell?",
+    hint: "Mehrfachauswahl möglich.",
+    multi: true,
+    options: [
+      { value: "akne", label: "Unreinheiten / Akne" },
+      { value: "falten", label: "Falten / Linien" },
+      { value: "pigment", label: "Pigmentflecken / unebener Teint" },
+      { value: "rot", label: "Rötungen / Couperose" },
+      { value: "fahl", label: "Fahler, müder Teint" },
+      { value: "trockenheit", label: "Trockenheit / Spannungsgefühl" }
+    ]
+  },
+  {
+    id: "sun",
+    title: "Wie viel Zeit verbringst du in der Sonne?",
+    hint: null,
+    multi: false,
+    options: [
+      { value: "wenig", label: "Wenig – meist drinnen" },
+      { value: "mittel", label: "Mittel – täglich kurz draußen" },
+      { value: "viel", label: "Viel – oft im Freien" }
+    ]
+  },
+  {
+    id: "sensitivity",
+    title: "Wie reagiert deine Haut auf neue Produkte?",
+    hint: null,
+    multi: false,
+    options: [
+      { value: "robust", label: "Robust – verträgt fast alles" },
+      { value: "neutral", label: "Neutral – manchmal leichte Reaktionen" },
+      { value: "empfindlich", label: "Empfindlich – brennt oder rötet sich oft" }
+    ]
+  },
+  {
+    id: "routine",
+    title: "Wie aufwändig darf deine Pflegeroutine sein?",
+    hint: null,
+    multi: false,
+    options: [
+      { value: "minimal", label: "Minimal – ein Produkt reicht" },
+      { value: "standard", label: "Standard – Reinigung, Creme, Sonnenschutz" },
+      { value: "umfassend", label: "Umfassend – ich liebe mehrstufige Routinen" }
+    ]
+  },
+  {
+    id: "climate",
+    title: "In welchem Klima lebst du überwiegend?",
+    hint: null,
+    multi: false,
+    options: [
+      { value: "trocken", label: "Trocken (z. B. Heizungsluft im Winter)" },
+      { value: "feucht", label: "Feucht / schwül" },
+      { value: "gemaessigt", label: "Gemäßigt" }
+    ]
+  },
+  {
+    id: "goal",
+    title: "Was ist dein wichtigstes Pflegeziel?",
+    hint: null,
+    multi: false,
+    options: [
+      { value: "feuchtigkeit", label: "Intensive Feuchtigkeit" },
+      { value: "antiaging", label: "Anti-Aging / straffere Haut" },
+      { value: "klar", label: "Klare, reine Haut" },
+      { value: "glow", label: "Strahlender, ebenmäßiger Teint" },
+      { value: "beruhigung", label: "Beruhigung & Schutz" }
+    ]
+  }
+];
+
+const products = {
+  hydra: {
+    name: "Hydra-Boost Feuchtigkeitscreme",
+    desc: "Eine leichte, tief feuchtigkeitsspendende Creme, ideal für trockene oder dehydrierte Haut. Sie stärkt die Hautbarriere und sorgt für ein angenehmes Hautgefühl ohne zu beschweren.",
+    ingredients: ["Hyaluronsäure", "Panthenol", "Squalan", "Glycerin"]
+  },
+  clear: {
+    name: "Clear Skin BHA-Serum",
+    desc: "Ein klärendes Serum mit Salicylsäure, das verstopfte Poren befreit, Talg reguliert und Unreinheiten reduziert – perfekt für fettige und zu Akne neigende Haut.",
+    ingredients: ["Salicylsäure (BHA)", "Niacinamid", "Zink PCA", "Grüntee-Extrakt"]
+  },
+  age: {
+    name: "Age-Defense Retinol Nachtcreme",
+    desc: "Eine pflegende Nachtcreme mit Retinol und Peptiden, die Linien sichtbar mildert, die Zellerneuerung unterstützt und die Haut über Nacht regeneriert.",
+    ingredients: ["Retinol", "Peptide", "Vitamin E", "Sheabutter"]
+  },
+  calm: {
+    name: "Calming Repair Balm",
+    desc: "Ein beruhigender Pflegebalsam für sensible, gerötete Haut. Stärkt die Hautbarriere, reduziert Reizungen und spendet sanfte Feuchtigkeit.",
+    ingredients: ["Centella Asiatica", "Allantoin", "Bisabolol", "Ceramide"]
+  },
+  glow: {
+    name: "Radiance Vitamin-C Serum",
+    desc: "Ein antioxidatives Serum, das den Teint aufhellt, Pigmentflecken reduziert und die Haut zum Strahlen bringt – ideal für fahle oder ungleichmäßige Haut.",
+    ingredients: ["Vitamin C (Ascorbinsäure)", "Ferulasäure", "Vitamin E", "Niacinamid"]
+  },
+  balance: {
+    name: "Balance Daily Fluid",
+    desc: "Ein leichtes Tagesfluid für Mischhaut, das die T-Zone mattiert und gleichzeitig trockene Partien mit Feuchtigkeit versorgt – das perfekte Gleichgewicht für jeden Tag.",
+    ingredients: ["Niacinamid", "Hyaluronsäure", "Jojobaöl", "Aloe Vera"]
+  }
+};
+
+const answers = {};
+let currentIndex = 0;
+
+function renderQuestion() {
+  const quiz = document.getElementById("quiz");
+  const q = questions[currentIndex];
+  const selected = answers[q.id] || (q.multi ? [] : null);
+
+  quiz.innerHTML = `
+    <div class="question active">
+      <h2>${q.title}</h2>
+      ${q.hint ? `<p class="hint">${q.hint}</p>` : ""}
+      <div class="options">
+        ${q.options.map(opt => {
+          const isSelected = q.multi ? selected.includes(opt.value) : selected === opt.value;
+          return `
+            <label class="option ${isSelected ? "selected" : ""}">
+              <input type="${q.multi ? "checkbox" : "radio"}" name="${q.id}" value="${opt.value}" ${isSelected ? "checked" : ""}>
+              ${opt.label}
+            </label>
+          `;
+        }).join("")}
+      </div>
+      <div class="nav">
+        <button class="btn-secondary" onclick="prev()" ${currentIndex === 0 ? "style='visibility:hidden'" : ""}>Zurück</button>
+        <button class="btn-primary" id="nextBtn" onclick="next()" disabled>
+          ${currentIndex === questions.length - 1 ? "Empfehlung anzeigen" : "Weiter"}
+        </button>
+      </div>
+    </div>
+  `;
+
+  quiz.querySelectorAll("input").forEach(input => {
+    input.addEventListener("change", () => handleSelect(q));
+  });
+
+  updateNextButton(q);
+  updateProgress();
+}
+
+function handleSelect(q) {
+  const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
+  if (q.multi) {
+    answers[q.id] = Array.from(inputs).filter(i => i.checked).map(i => i.value);
+  } else {
+    answers[q.id] = Array.from(inputs).find(i => i.checked)?.value;
+  }
+  document.querySelectorAll(".option").forEach((label, i) => {
+    const checked = inputs[i].checked;
+    label.classList.toggle("selected", checked);
+  });
+  updateNextButton(q);
+}
+
+function updateNextButton(q) {
+  const btn = document.getElementById("nextBtn");
+  const val = answers[q.id];
+  const valid = q.multi ? val && val.length > 0 : !!val;
+  btn.disabled = !valid;
+}
+
+function updateProgress() {
+  const pct = ((currentIndex) / questions.length) * 100;
+  document.getElementById("progressBar").style.width = pct + "%";
+}
+
+function next() {
+  if (currentIndex < questions.length - 1) {
+    currentIndex++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function prev() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderQuestion();
+  }
+}
+
+function recommend() {
+  const scores = { hydra: 0, clear: 0, age: 0, calm: 0, glow: 0, balance: 0 };
+
+  // Hauttyp
+  if (answers.type === "trocken") scores.hydra += 3;
+  if (answers.type === "fettig") scores.clear += 3;
+  if (answers.type === "misch") scores.balance += 3;
+  if (answers.type === "normal") scores.balance += 1;
+  if (answers.type === "sensibel") scores.calm += 3;
+
+  // Alter
+  if (answers.age === "u20") scores.clear += 1;
+  if (answers.age === "20_30") scores.balance += 1;
+  if (answers.age === "30_45") { scores.age += 1; scores.glow += 1; }
+  if (answers.age === "45_60") scores.age += 3;
+  if (answers.age === "ue60") { scores.age += 3; scores.hydra += 2; }
+
+  // Concerns (multi)
+  (answers.concerns || []).forEach(c => {
+    if (c === "akne") scores.clear += 2;
+    if (c === "falten") scores.age += 2;
+    if (c === "pigment") scores.glow += 2;
+    if (c === "rot") scores.calm += 2;
+    if (c === "fahl") scores.glow += 2;
+    if (c === "trockenheit") scores.hydra += 2;
+  });
+
+  // Sonne
+  if (answers.sun === "viel") scores.glow += 1;
+
+  // Sensibilität
+  if (answers.sensitivity === "empfindlich") scores.calm += 2;
+
+  // Klima
+  if (answers.climate === "trocken") scores.hydra += 1;
+  if (answers.climate === "feucht") scores.clear += 1;
+
+  // Ziel
+  if (answers.goal === "feuchtigkeit") scores.hydra += 3;
+  if (answers.goal === "antiaging") scores.age += 3;
+  if (answers.goal === "klar") scores.clear += 3;
+  if (answers.goal === "glow") scores.glow += 3;
+  if (answers.goal === "beruhigung") scores.calm += 3;
+
+  let best = "balance", max = -1;
+  for (const k in scores) {
+    if (scores[k] > max) { max = scores[k]; best = k; }
+  }
+  return products[best];
+}
+
+function showResult() {
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("progressBar").style.width = "100%";
+  const product = recommend();
+  document.getElementById("resultProduct").textContent = product.name;
+  document.getElementById("resultDesc").textContent = product.desc;
+  document.getElementById("resultIngredients").innerHTML =
+    product.ingredients.map(i => `<li>${i}</li>`).join("");
+  document.getElementById("result").classList.add("active");
+}
+
+function restart() {
+  for (const k in answers) delete answers[k];
+  currentIndex = 0;
+  document.getElementById("quiz").style.display = "block";
+  document.getElementById("result").classList.remove("active");
+  renderQuestion();
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
